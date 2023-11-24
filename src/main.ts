@@ -77,7 +77,7 @@ const answer = async (
                     let answer: string = message.content[0]?.text.value;
                     const startIndex = answer.indexOf("[");
                     const endIndex = answer.lastIndexOf("]");
-
+                    console.log("answer");
                     console.log(answer);
                     if (
                         startIndex !== -1 &&

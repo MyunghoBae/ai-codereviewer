@@ -101,6 +101,7 @@ const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0,
                     let answer = (_a = message.content[0]) === null || _a === void 0 ? void 0 : _a.text.value;
                     const startIndex = answer.indexOf("[");
                     const endIndex = answer.lastIndexOf("]");
+                    console.log("answer");
                     console.log(answer);
                     if (startIndex !== -1 &&
                         endIndex !== -1 &&
