@@ -64,17 +64,20 @@ const answer = async (
     const runanswer = await openai.beta.threads.runs.retrieve(threadId, runId);
 
     setTimeout(async () => {
+        console.log(runanswer.status);
         if (runanswer.status !== "completed") {
             answer(threadId, runId, prDetails);
         } else if (runanswer.status === "completed") {
             const messages = await openai.beta.threads.messages.list(threadId);
 
             messages.data.forEach((message: any) => {
+                console.log(message);
                 if (message.role === "assistant") {
                     let answer: string = message.content[0]?.text.value;
                     const startIndex = answer.indexOf("[");
                     const endIndex = answer.lastIndexOf("]");
 
+                    console.log(answer);
                     if (
                         startIndex !== -1 &&
                         endIndex !== -1 &&
