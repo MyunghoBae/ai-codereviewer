@@ -65,7 +65,7 @@ const answer = async (
 
     setTimeout(async () => {
         console.log("Status", runanswer.status);
-        console.log("Status");
+
         if (runanswer.status !== "completed") {
             answer(threadId, runId, prDetails);
         } else if (runanswer.status === "completed") {
@@ -88,8 +88,9 @@ const answer = async (
                             startIndex,
                             endIndex + 1
                         );
+                        console.log(result);
                         const jsoncomments = JSON.parse(result);
-
+                        console.log(jsoncomments);
                         const finalComments = jsoncomments.map(
                             (comment: any) => ({
                                 body: comment.reviewComment,
@@ -97,6 +98,8 @@ const answer = async (
                                 line: Number(comment.lineNumber),
                             })
                         );
+
+                        console.log(finalComments);
                         createReviewComment(
                             prDetails.owner,
                             prDetails.repo,

@@ -89,7 +89,6 @@ const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0,
     const runanswer = yield openai.beta.threads.runs.retrieve(threadId, runId);
     setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
         console.log("Status", runanswer.status);
-        console.log("Status");
         if (runanswer.status !== "completed") {
             answer(threadId, runId, prDetails);
         }
@@ -107,12 +106,15 @@ const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0,
                         endIndex !== -1 &&
                         startIndex < endIndex) {
                         const result = answer.substring(startIndex, endIndex + 1);
+                        console.log(result);
                         const jsoncomments = JSON.parse(result);
+                        console.log(jsoncomments);
                         const finalComments = jsoncomments.map((comment) => ({
                             body: comment.reviewComment,
                             path: comment.filePath,
                             line: Number(comment.lineNumber),
                         }));
+                        console.log(finalComments);
                         createReviewComment(prDetails.owner, prDetails.repo, prDetails.pull_number, finalComments);
                     }
                     else {
