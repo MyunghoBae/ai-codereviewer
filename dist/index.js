@@ -88,6 +88,8 @@ function getDiff(owner, repo, pull_number) {
 const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0, function* () {
     const runanswer = yield openai.beta.threads.runs.retrieve(threadId, runId);
     setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
+        console.log("Status", runanswer.status);
+        console.log("Status");
         if (runanswer.status !== "completed") {
             answer(threadId, runId, prDetails);
         }
@@ -95,10 +97,12 @@ const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0,
             const messages = yield openai.beta.threads.messages.list(threadId);
             messages.data.forEach((message) => {
                 var _a;
+                console.log(message);
                 if (message.role === "assistant") {
                     let answer = (_a = message.content[0]) === null || _a === void 0 ? void 0 : _a.text.value;
                     const startIndex = answer.indexOf("[");
                     const endIndex = answer.lastIndexOf("]");
+                    console.log(answer);
                     if (startIndex !== -1 &&
                         endIndex !== -1 &&
                         startIndex < endIndex) {

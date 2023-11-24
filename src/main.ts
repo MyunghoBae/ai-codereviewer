@@ -64,7 +64,8 @@ const answer = async (
     const runanswer = await openai.beta.threads.runs.retrieve(threadId, runId);
 
     setTimeout(async () => {
-        console.log(runanswer.status);
+        console.log("Status", runanswer.status);
+        console.log("Status");
         if (runanswer.status !== "completed") {
             answer(threadId, runId, prDetails);
         } else if (runanswer.status === "completed") {
