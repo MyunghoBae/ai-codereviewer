@@ -95,10 +95,11 @@ const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0,
         else if (runanswer.status === "completed") {
             const messages = yield openai.beta.threads.messages.list(threadId);
             messages.data.forEach((message) => {
-                var _a;
+                var _a, _b;
                 console.log(message);
                 if (message.role === "assistant") {
-                    let answer = (_a = message.content[0]) === null || _a === void 0 ? void 0 : _a.text.value;
+                    console.log((_a = message.content[0]) === null || _a === void 0 ? void 0 : _a.text);
+                    let answer = (_b = message.content[0]) === null || _b === void 0 ? void 0 : _b.text.value;
                     const startIndex = answer.indexOf("[");
                     const endIndex = answer.lastIndexOf("]");
                     console.log("answer");

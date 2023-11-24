@@ -74,6 +74,7 @@ const answer = async (
             messages.data.forEach((message: any) => {
                 console.log(message);
                 if (message.role === "assistant") {
+                    console.log(message.content[0]?.text);
                     let answer: string = message.content[0]?.text.value;
                     const startIndex = answer.indexOf("[");
                     const endIndex = answer.lastIndexOf("]");
