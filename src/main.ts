@@ -138,21 +138,23 @@ async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
                .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
                .join("\n")}
            \`\`\``;
-                if (content.length < 5000) {
-                    await openai.beta.threads.messages.create(thread.id, {
-                        role: "user",
-                        content,
-                    });
-                    i += 1;
-                }
+
+                console.log(content);
+                // if (content.length < 5000) {
+                //     await openai.beta.threads.messages.create(thread.id, {
+                //         role: "user",
+                //         content,
+                //     });
+                //     i += 1;
+                // }
             }
         }
 
-        const run = await openai.beta.threads.runs.create(thread.id, {
-            assistant_id: assistant.id,
-        });
+        // const run = await openai.beta.threads.runs.create(thread.id, {
+        //     assistant_id: assistant.id,
+        // });
 
-        await answer(thread.id, run.id, prDetails);
+        // await answer(thread.id, run.id, prDetails);
     } catch (error) {
         console.log(error);
     }
