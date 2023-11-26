@@ -159,17 +159,7 @@ function analyzeCode(parsedDiff, prDetails) {
                 for (const chunk of file.chunks) {
                     yield openai.beta.threads.messages.create(thread.id, {
                         role: "user",
-                        content: `${i === 0
-                            ? `  
-                    Pull request title: ${prDetails.title}
-                    Pull request description:
-                    
-                    ---
-                    ${prDetails.description}
-                    ---`
-                            : ""}
-                    
-                    File path for review: "${file.to}" \\n` +
+                        content: `File path for review: "${file.to}" \\n` +
                             `Git diff to review:
 
                    \`\`\`diff

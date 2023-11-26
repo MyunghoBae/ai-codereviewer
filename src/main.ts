@@ -148,19 +148,7 @@ async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
                 await openai.beta.threads.messages.create(thread.id, {
                     role: "user",
                     content:
-                        `${
-                            i === 0
-                                ? `  
-                    Pull request title: ${prDetails.title}
-                    Pull request description:
-                    
-                    ---
-                    ${prDetails.description}
-                    ---`
-                                : ""
-                        }
-                    
-                    File path for review: "${file.to}" \\n` +
+                        `File path for review: "${file.to}" \\n` +
                         `Git diff to review:
 
                    \`\`\`diff
