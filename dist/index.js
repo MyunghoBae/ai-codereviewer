@@ -130,7 +130,27 @@ const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0,
 function analyzeCode(parsedDiff, prDetails) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const assistant = yield openai.beta.assistants.retrieve(process.env.ASSISTANT_ID || "");
+            const assistant = yield openai.beta.assistants.create({
+                name: "Github answers",
+                instructions: `Your task is to review pull requests. Instructions:
+            - Provide the response in following JSON format:  [{"lineNumber":  <line_number>, "reviewComment": "<review comment>", "filePath": "<file path>"}]
+            - Do not give positive comments or compliments.
+            - Provide comments and suggestions ONLY if there is something to improve, otherwise return an empty array.
+            - Write the comment in GitHub Markdown format.
+            - Use the given description only for the overall context and only comment the code.
+            - IMPORTANT: NEVER suggest adding comments to the code.
+            
+          
+            Pull request title: ${prDetails.title}
+            Pull request description:
+            
+            ---
+            ${prDetails.description}
+            ---
+            `,
+                tools: [{ type: "code_interpreter" }],
+                model: "gpt-4-1106-preview",
+            });
             const thread = yield openai.beta.threads.create();
             let i = 0;
             for (const file of parsedDiff) {
