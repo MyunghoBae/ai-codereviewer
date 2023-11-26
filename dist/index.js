@@ -123,6 +123,7 @@ const answer = (threadId, runId, prDetails, getAllChangedLines) => __awaiter(voi
                             return {
                                 body: comment.reviewComment,
                                 path: comment.filePath,
+                                postion: 0,
                             };
                         });
                         console.log(finalComments);

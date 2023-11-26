@@ -110,6 +110,7 @@ const answer = async (
                                 return {
                                     body: comment.reviewComment,
                                     path: comment.filePath,
+                                    postion: 0,
                                 };
                             }
                         );
