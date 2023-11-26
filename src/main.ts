@@ -2,12 +2,12 @@ import { readFileSync } from "fs";
 import * as core from "@actions/core";
 import OpenAI from "openai";
 import { Octokit } from "@octokit/rest";
-import parseDiff, { Chunk, File } from "parse-diff";
+import parseDiff, { File } from "parse-diff";
 import minimatch from "minimatch";
+import "dotenv/config";
 
 const GITHUB_TOKEN: string = core.getInput("GITHUB_TOKEN");
 const OPENAI_API_KEY: string = core.getInput("OPENAI_API_KEY");
-const OPENAI_API_MODEL: string = core.getInput("OPENAI_API_MODEL");
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
@@ -117,37 +117,31 @@ const answer = async (
 };
 
 async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
-    const assistant = await openai.beta.assistants.create({
-        name: "Github answers",
-        instructions: `Your task is to review pull requests. Instructions:
-        - Provide the response in following JSON format:  [{"lineNumber":  <line_number>, "reviewComment": "<review comment>", "filePath": "<file path>"}]
-        - Do not give positive comments or compliments.
-        - Provide comments and suggestions ONLY if there is something to improve, otherwise return an empty array.
-        - Write the comment in GitHub Markdown format.
-        - Use the given description only for the overall context and only comment the code.
-        - IMPORTANT: NEVER suggest adding comments to the code.
-        
-      
-        Pull request title: ${prDetails.title}
-        Pull request description:
-        
-        ---
-        ${prDetails.description}
-        ---
-        `,
-        tools: [{ type: "code_interpreter" }],
-        model: "gpt-4-1106-preview",
-    });
+    const assistant = await openai.beta.assistants.retrieve(
+        process.env.ASSISTANT_ID || ""
+    );
     const thread = await openai.beta.threads.create();
-    const comments: Array<{ body: string; path: string; line: number }> = [];
 
+    let i = 0;
     for (const file of parsedDiff) {
         if (file.to === "/dev/null") continue; // Ignore deleted files
         for (const chunk of file.chunks) {
             await openai.beta.threads.messages.create(thread.id, {
                 role: "user",
                 content:
-                    `File path for review: "${file.to}" \\n` +
+                    `${
+                        i === 0
+                            ? `  
+                    Pull request title: ${prDetails.title}
+                    Pull request description:
+                    
+                    ---
+                    ${prDetails.description}
+                    ---`
+                            : ""
+                    }
+                    
+                    File path for review: "${file.to}" \\n` +
                     `Git diff to review:
 
                    \`\`\`diff
@@ -158,8 +152,7 @@ async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
                        .join("\n")}
                    \`\`\``,
             });
-            // const prompt = createPrompt(file, chunk, prDetails);
-            // const aiResponse = await getAIResponse(prompt);
+            i += 1;
         }
     }
 
@@ -168,62 +161,6 @@ async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
     });
 
     await answer(thread.id, run.id, prDetails);
-
-    // if (aiResponse) {
-    //     const newComments = createComment(file, chunk, aiResponse);
-    //     if (newComments) {
-    //         comments.push(...newComments);
-    //     }
-    // }
-    // return comments;
-}
-
-async function getBaseAndHeadShas(
-    owner: string,
-    repo: string,
-    pull_number: number
-): Promise<{ baseSha: string; headSha: string }> {
-    const prResponse = await octokit.pulls.get({
-        owner,
-        repo,
-        pull_number,
-    });
-    return {
-        baseSha: prResponse.data.base.sha,
-        headSha: prResponse.data.head.sha,
-    };
-}
-
-function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
-    return `Your task is to review pull requests. Instructions:
-- Provide the response in following JSON format:  [{"lineNumber":  <line_number>, "reviewComment": "<review comment>"}]
-- Do not give positive comments or compliments.
-- Provide comments and suggestions ONLY if there is something to improve, otherwise return an empty array.
-- Write the comment in GitHub Markdown format.
-- Use the given description only for the overall context and only comment the code.
-- IMPORTANT: NEVER suggest adding comments to the code.
-
-Review the following code diff in the file "${
-        file.to
-    }" and take the pull request title and description into account when writing the response.
-  
-Pull request title: ${prDetails.title}
-Pull request description:
-
----
-${prDetails.description}
----
-
-Git diff to review:
-
-\`\`\`diff
-${chunk.content}
-${chunk.changes
-    // @ts-expect-error - ln and ln2 exists where needed
-    .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
-    .join("\n")}
-\`\`\`
-`;
 }
 
 async function createReviewComment(
