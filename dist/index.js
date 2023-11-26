@@ -147,6 +147,7 @@ function analyzeCode(parsedDiff, prDetails) {
                             .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
                             .join("\n")}
            \`\`\``;
+                    console.log(content);
                     if (content.length < 5000) {
                         yield openai.beta.threads.messages.create(thread.id, {
                             role: "user",

@@ -127,7 +127,6 @@ async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
         for (const file of parsedDiff) {
             if (file.to === "/dev/null") continue; // Ignore deleted files
             for (const chunk of file.chunks) {
-               
                 const content =
                     `File path for review: "${file.to}" \\n` +
                     `Git diff to review:
@@ -139,6 +138,7 @@ async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
                .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
                .join("\n")}
            \`\`\``;
+                console.log(content);
                 if (content.length < 5000) {
                     await openai.beta.threads.messages.create(thread.id, {
                         role: "user",
