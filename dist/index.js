@@ -129,43 +129,48 @@ const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0,
 });
 function analyzeCode(parsedDiff, prDetails) {
     return __awaiter(this, void 0, void 0, function* () {
-        const assistant = yield openai.beta.assistants.retrieve(process.env.ASSISTANT_ID || "");
-        const thread = yield openai.beta.threads.create();
-        let i = 0;
-        for (const file of parsedDiff) {
-            if (file.to === "/dev/null")
-                continue; // Ignore deleted files
-            for (const chunk of file.chunks) {
-                yield openai.beta.threads.messages.create(thread.id, {
-                    role: "user",
-                    content: `${i === 0
-                        ? `  
+        try {
+            const assistant = yield openai.beta.assistants.retrieve(process.env.ASSISTANT_ID || "");
+            const thread = yield openai.beta.threads.create();
+            let i = 0;
+            for (const file of parsedDiff) {
+                if (file.to === "/dev/null")
+                    continue; // Ignore deleted files
+                for (const chunk of file.chunks) {
+                    yield openai.beta.threads.messages.create(thread.id, {
+                        role: "user",
+                        content: `${i === 0
+                            ? `  
                     Pull request title: ${prDetails.title}
                     Pull request description:
                     
                     ---
                     ${prDetails.description}
                     ---`
-                        : ""}
+                            : ""}
                     
                     File path for review: "${file.to}" \\n` +
-                        `Git diff to review:
+                            `Git diff to review:
 
                    \`\`\`diff
                    ${chunk.content}
                    ${chunk.changes
-                            // @ts-expect-error - ln and ln2 exists where needed
-                            .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
-                            .join("\n")}
+                                // @ts-expect-error - ln and ln2 exists where needed
+                                .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
+                                .join("\n")}
                    \`\`\``,
-                });
-                i += 1;
+                    });
+                    i += 1;
+                }
             }
+            const run = yield openai.beta.threads.runs.create(thread.id, {
+                assistant_id: assistant.id,
+            });
+            yield answer(thread.id, run.id, prDetails);
         }
-        const run = yield openai.beta.threads.runs.create(thread.id, {
-            assistant_id: assistant.id,
-        });
-        yield answer(thread.id, run.id, prDetails);
+        catch (error) {
+            console.log(error);
+        }
     });
 }
 function createReviewComment(owner, repo, pull_number, comments) {
