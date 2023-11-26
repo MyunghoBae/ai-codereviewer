@@ -59,7 +59,8 @@ async function getDiff(
 const answer = async (
     threadId: string,
     runId: string,
-    prDetails: PRDetails
+    prDetails: PRDetails,
+    getAllChangedLines: any
 ) => {
     const runanswer = await openai.beta.threads.runs.retrieve(threadId, runId);
 
@@ -67,7 +68,7 @@ const answer = async (
         console.log("Status", runanswer.status);
 
         if (runanswer.status !== "completed") {
-            answer(threadId, runId, prDetails);
+            answer(threadId, runId, prDetails, getAllChangedLines);
         } else if (runanswer.status === "completed") {
             const messages = await openai.beta.threads.messages.list(threadId);
 
@@ -93,11 +94,24 @@ const answer = async (
                         const jsoncomments = JSON.parse(result);
                         console.log(jsoncomments);
                         const finalComments = jsoncomments.map(
-                            (comment: any) => ({
-                                body: comment.reviewComment,
-                                path: comment.filePath,
-                                line: Number(comment.lineNumber),
-                            })
+                            (comment: any) => {
+                                if (
+                                    getAllChangedLines[comment.filePath] &&
+                                    getAllChangedLines[
+                                        comment.filePath
+                                    ].includes(Number(comment.lineNumber))
+                                ) {
+                                    return {
+                                        body: comment.reviewComment,
+                                        path: comment.filePath,
+                                        line: Number(comment.lineNumber),
+                                    };
+                                }
+                                return {
+                                    body: comment.reviewComment,
+                                    path: comment.filePath,
+                                };
+                            }
                         );
 
                         console.log(finalComments);
@@ -124,9 +138,20 @@ async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
         const thread = await openai.beta.threads.create();
 
         let i = 0;
+
+        const getAllChangedLines: any = {};
         for (const file of parsedDiff) {
-            if (file.to === "/dev/null") continue; // Ignore deleted files
+            if (file.to === "/dev/null" || file.to === undefined) continue; // Ignore deleted files
+            getAllChangedLines[file.to] = [];
+
             for (const chunk of file.chunks) {
+                chunk.changes.forEach((change) => {
+                    if (change.type === "add") {
+                        if (file.to !== undefined) {
+                            getAllChangedLines[file.to].push(change.ln);
+                        }
+                    }
+                });
                 const content =
                     `File path for review: "${file.to}" \\n` +
                     `Git diff to review:
@@ -153,7 +178,7 @@ async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
             assistant_id: assistant.id,
         });
 
-        await answer(thread.id, run.id, prDetails);
+        await answer(thread.id, run.id, prDetails, getAllChangedLines);
     } catch (error) {
         console.log(error);
     }

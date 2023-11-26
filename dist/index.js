@@ -85,12 +85,12 @@ function getDiff(owner, repo, pull_number) {
         return response.data;
     });
 }
-const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0, function* () {
+const answer = (threadId, runId, prDetails, getAllChangedLines) => __awaiter(void 0, void 0, void 0, function* () {
     const runanswer = yield openai.beta.threads.runs.retrieve(threadId, runId);
     setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
         console.log("Status", runanswer.status);
         if (runanswer.status !== "completed") {
-            answer(threadId, runId, prDetails);
+            answer(threadId, runId, prDetails, getAllChangedLines);
         }
         else if (runanswer.status === "completed") {
             const messages = yield openai.beta.threads.messages.list(threadId);
@@ -111,11 +111,20 @@ const answer = (threadId, runId, prDetails) => __awaiter(void 0, void 0, void 0,
                         console.log(result);
                         const jsoncomments = JSON.parse(result);
                         console.log(jsoncomments);
-                        const finalComments = jsoncomments.map((comment) => ({
-                            body: comment.reviewComment,
-                            path: comment.filePath,
-                            line: Number(comment.lineNumber),
-                        }));
+                        const finalComments = jsoncomments.map((comment) => {
+                            if (getAllChangedLines[comment.filePath] &&
+                                getAllChangedLines[comment.filePath].includes(Number(comment.lineNumber))) {
+                                return {
+                                    body: comment.reviewComment,
+                                    path: comment.filePath,
+                                    line: Number(comment.lineNumber),
+                                };
+                            }
+                            return {
+                                body: comment.reviewComment,
+                                path: comment.filePath,
+                            };
+                        });
                         console.log(finalComments);
                         createReviewComment(prDetails.owner, prDetails.repo, prDetails.pull_number, finalComments);
                     }
@@ -133,10 +142,19 @@ function analyzeCode(parsedDiff, prDetails) {
             const assistant = yield openai.beta.assistants.retrieve("asst_DtgN7N0SA3KMEvjtFmsQdoF9");
             const thread = yield openai.beta.threads.create();
             let i = 0;
+            const getAllChangedLines = {};
             for (const file of parsedDiff) {
-                if (file.to === "/dev/null")
+                if (file.to === "/dev/null" || file.to === undefined)
                     continue; // Ignore deleted files
+                getAllChangedLines[file.to] = [];
                 for (const chunk of file.chunks) {
+                    chunk.changes.forEach((change) => {
+                        if (change.type === "add") {
+                            if (file.to !== undefined) {
+                                getAllChangedLines[file.to].push(change.ln);
+                            }
+                        }
+                    });
                     const content = `File path for review: "${file.to}" \\n` +
                         `Git diff to review:
 
@@ -160,7 +178,7 @@ function analyzeCode(parsedDiff, prDetails) {
             const run = yield openai.beta.threads.runs.create(thread.id, {
                 assistant_id: assistant.id,
             });
-            yield answer(thread.id, run.id, prDetails);
+            yield answer(thread.id, run.id, prDetails, getAllChangedLines);
         }
         catch (error) {
             console.log(error);
