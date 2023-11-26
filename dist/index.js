@@ -157,20 +157,23 @@ function analyzeCode(parsedDiff, prDetails) {
                 if (file.to === "/dev/null")
                     continue; // Ignore deleted files
                 for (const chunk of file.chunks) {
-                    yield openai.beta.threads.messages.create(thread.id, {
-                        role: "user",
-                        content: `File path for review: "${file.to}" \\n` +
-                            `Git diff to review:
+                    const content = `File path for review: "${file.to}" \\n` +
+                        `Git diff to review:
 
-                   \`\`\`diff
-                   ${chunk.content}
-                   ${chunk.changes
-                                // @ts-expect-error - ln and ln2 exists where needed
-                                .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
-                                .join("\n")}
-                   \`\`\``,
-                    });
-                    i += 1;
+           \`\`\`diff
+           ${chunk.content}
+           ${chunk.changes
+                            // @ts-expect-error - ln and ln2 exists where needed
+                            .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
+                            .join("\n")}
+           \`\`\``;
+                    if (content.length < 5000) {
+                        yield openai.beta.threads.messages.create(thread.id, {
+                            role: "user",
+                            content,
+                        });
+                        i += 1;
+                    }
                 }
             }
             const run = yield openai.beta.threads.runs.create(thread.id, {
