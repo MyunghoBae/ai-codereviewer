@@ -102,15 +102,14 @@ const answer = (threadId, runId, prDetails, getAllChangedLines) => __awaiter(voi
                     let answer = (_b = message.content[0]) === null || _b === void 0 ? void 0 : _b.text.value;
                     const startIndex = answer.indexOf("[");
                     const endIndex = answer.lastIndexOf("]");
-                    console.log("answer");
-                    console.log(answer);
+                    console.log("answer", answer);
                     if (startIndex !== -1 &&
                         endIndex !== -1 &&
                         startIndex < endIndex) {
                         const result = answer.substring(startIndex, endIndex + 1);
-                        console.log(result);
+                        console.log("result=>", result);
                         const jsoncomments = JSON.parse(result);
-                        console.log(jsoncomments);
+                        console.log("jsoncomments=>", jsoncomments);
                         const finalComments = jsoncomments.map((comment) => {
                             if (getAllChangedLines[comment.filePath] &&
                                 getAllChangedLines[comment.filePath].includes(Number(comment.lineNumber))) {
@@ -126,7 +125,7 @@ const answer = (threadId, runId, prDetails, getAllChangedLines) => __awaiter(voi
                                 postion: 0,
                             };
                         });
-                        console.log(finalComments);
+                        console.log("finalComments=>", finalComments);
                         createReviewComment(prDetails.owner, prDetails.repo, prDetails.pull_number, finalComments);
                     }
                     else {

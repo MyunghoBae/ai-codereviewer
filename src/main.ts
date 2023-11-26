@@ -79,8 +79,7 @@ const answer = async (
                     let answer: string = message.content[0]?.text.value;
                     const startIndex = answer.indexOf("[");
                     const endIndex = answer.lastIndexOf("]");
-                    console.log("answer");
-                    console.log(answer);
+                    console.log("answer", answer);
                     if (
                         startIndex !== -1 &&
                         endIndex !== -1 &&
@@ -90,9 +89,9 @@ const answer = async (
                             startIndex,
                             endIndex + 1
                         );
-                        console.log(result);
+                        console.log("result=>", result);
                         const jsoncomments = JSON.parse(result);
-                        console.log(jsoncomments);
+                        console.log("jsoncomments=>", jsoncomments);
                         const finalComments = jsoncomments.map(
                             (comment: any) => {
                                 if (
@@ -115,7 +114,7 @@ const answer = async (
                             }
                         );
 
-                        console.log(finalComments);
+                        console.log("finalComments=>", finalComments);
                         createReviewComment(
                             prDetails.owner,
                             prDetails.repo,
