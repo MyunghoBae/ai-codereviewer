@@ -139,7 +139,7 @@ const answer = (threadId, runId, prDetails, getAllChangedLines) => __awaiter(voi
 function analyzeCode(parsedDiff, prDetails) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const assistant = yield openai.beta.assistants.retrieve("asst_DtgN7N0SA3KMEvjtFmsQdoF9");
+            const assistant = yield openai.beta.assistants.retrieve("asst_ZupjgVaZxrFWhnLlPdu4HD5e");
             const thread = yield openai.beta.threads.create();
             let i = 0;
             const getAllChangedLines = {};
