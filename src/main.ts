@@ -133,7 +133,7 @@ const answer = async (
 async function analyzeCode(parsedDiff: File[], prDetails: PRDetails) {
     try {
         const assistant = await openai.beta.assistants.retrieve(
-            "asst_DtgN7N0SA3KMEvjtFmsQdoF9"
+            "asst_ZupjgVaZxrFWhnLlPdu4HD5e"
         );
         const thread = await openai.beta.threads.create();
 
